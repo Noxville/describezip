@@ -14,26 +14,41 @@ class Node:
         return self.children[path[0]].traverse(path[1:])
 
     def add_value(self, value):
-        self.data.append(value)
+        
+        if type(value) == type([]):
+            for d in value:
+                self.add_value(d)
+        elif type(value) == type({}):
+            for k, v in value.items():
+                #print(f"key={k}, value={v}")
+                n = self.traverse([k])
+                n.add_value(v)
+        else:
+            self.data.append(value)
 
     def __repr__(self):
-        unique = [_ for _ in list(set(self.data))]
-        types = list(set([str(type(_)).replace("<class '", "").replace("'>", "") for _ in unique]))
-        obj_type = types[0] if len(types) == 1 else 'mixed'
+        # No nested objects
+        if not any([type(d) == type({}) for d in self.data]):
+            unique = [_ for _ in list(set(self.data))]
+           
+            types = list(set([str(type(_)).replace("<class '", "").replace("'>", "") for _ in unique]))
+            obj_type = types[0] if len(types) == 1 else 'mixed'
 
-        match obj_type:
-            case 'int' | 'float':
-                description = describe_int(self.data, unique)
-            case 'str':
-                description = describe_str(self.data)
-            case 'bool':
-                description = describe_bool(self.data)
-            case 'mixed':
-                description = str(types)
-            case _:
-                raise Exception(f"Unknown type {obj_type}")
+            match obj_type:
+                case 'int' | 'float':
+                    description = describe_int(self.data, unique)
+                case 'str':
+                    description = describe_str(self.data)
+                case 'bool':
+                    description = describe_bool(self.data)
+                case 'mixed':
+                    description = str(types)
+                case _:
+                    raise Exception(f"Unknown type {obj_type}")
 
-        return f"[{obj_type}] {description}"
+            return f"[{obj_type}] {description}"
+        else:
+            return "fiddlesticks"
 
 
 def describe_int(values, uniques):
